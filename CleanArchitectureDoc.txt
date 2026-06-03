@@ -1,0 +1,94 @@
+CLEAN ARCHITECTURE BIBLE - .NET Core Web API (Restaurant Ordering System)
+
+This document serves as a guide to structuring your project using Clean Architecture principles. 
+It explains what each part of the solution must contain and its responsibilities.
+
+------------------------------------------------------
+1. Restaurant.API (Presentation Layer / Web API)
+------------------------------------------------------
+Purpose:
+- The entry point of the application (exposes HTTP endpoints).
+- Handles incoming HTTP requests and maps them to Application use cases.
+- Contains configurations for middlewares, authentication, Swagger, etc.
+
+Must Contain:
+- Controllers (thin, just orchestrate)
+- Middlewares (global error handling, logging, JWT auth)
+- Filters (validation, exception filters)
+- Dependency Injection setup
+- Program.cs / Startup.cs
+- appsettings.json (configuration)
+
+------------------------------------------------------
+2. Restaurant.Application (Application Layer / Use Cases)
+------------------------------------------------------
+Purpose:
+- Orchestrates business use cases (commands/queries).
+- Contains the application logic but no infrastructure details.
+- Depends only on Domain.
+
+Must Contain:
+- Interfaces (abstractions for repositories, services)
+- DTOs (Data Transfer Objects)
+- CQRS Handlers (Commands & Queries with MediatR)
+- Validators (FluentValidation rules)
+- Behaviors (pipeline behaviors like logging, validation)
+- Application-specific exceptions
+
+------------------------------------------------------
+3. Restaurant.Domain (Domain Layer / Core Business)
+------------------------------------------------------
+Purpose:
+- The heart of the system: entities, value objects, and business rules.
+- Independent of frameworks and libraries.
+- Should be 100% pure C# with no external dependencies.
+
+Must Contain:
+- Entities (Order, MenuItem, User, Branch, etc.)
+- Value Objects (Money, Address, PhoneNumber)
+- Enums (OrderStatus, PaymentType)
+- Domain Events (OrderPlacedEvent, PaymentReceivedEvent)
+- Domain-specific Exceptions
+
+------------------------------------------------------
+4. Restaurant.Infrastructure (Infrastructure Layer / Implementations)
+------------------------------------------------------
+Purpose:
+- Provides implementations for Application abstractions.
+- Handles data persistence, third-party services, and external resources.
+
+Must Contain:
+- Persistence/
+  - AppDbContext (EF Core DbContext)
+  - Configurations (Fluent API entity configs)
+  - Migrations (database migrations)
+- Repositories (implementations of repository interfaces)
+- Services (implement external integrations: Email, SMS, Payment Gateway, etc.)
+- Logging, Caching (Redis), Messaging (RabbitMQ/Kafka)
+
+------------------------------------------------------
+5. Cross-Cutting Concerns (Shared)
+------------------------------------------------------
+Optionally, you can add a Shared/ project for reusable components.
+
+Must Contain:
+- Shared abstractions (e.g., Result<T>, Error, Response Wrappers)
+- Constants, Helpers, and Utilities
+
+------------------------------------------------------
+ARCHITECTURAL PRINCIPLES
+------------------------------------------------------
+- Dependency Rule: Dependencies point inwards. 
+  (API -> Application -> Domain. Infrastructure implements outward interfaces.)
+- Entities (Domain) are the core. They know nothing about other layers.
+- Application defines contracts. Infrastructure fulfills them.
+- API is thin. Controllers delegate logic to Application.
+- Keep business rules isolated in Domain.
+
+------------------------------------------------------
+SCALING NOTES
+------------------------------------------------------
+- At small scale: Monolith with Clean Architecture is fine.
+- At large scale: Split into microservices (Orders, Menu, Users, Payments).
+- Use Redis caching, Message Queues, and DB Read Replicas.
+- Monitoring: Serilog + Seq/ELK, Prometheus + Grafana.
